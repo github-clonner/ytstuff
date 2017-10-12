@@ -3,55 +3,13 @@ const fs = require('fs'),
       ffmpeg = require('fluent-ffmpeg'),
       url = require('url'),
       io = require('socket.io')(),
-      songs = require('./songs.json'),
+      songs = require('./data/songs.json'),
       google = require('googleapis'),
       youtube = google.youtube('v3'),
-      API_TOKEN = require('./config.json').api_key,
+      config = require('./config/config.json'),
+      API_KEY = require('./config/youtube.json').api_key,
       _ = require('lodash'),
-      folder = './downloads/',
-      concurrency = 10;
-
-function sanatizeFileName(fileName) {
-    return fileName.replace(/[<>:\/\\\|\?\*\"]/g, '');
-}
-
-function getFileName(name) {
-    return folder + sanatizeFileName(name + '.mp3');
-}
-
-function getDuration(duration) {
-    var a = duration.match(/\d+/g);
-
-    if (duration.indexOf('M') >= 0 && duration.indexOf('H') == -1 && duration.indexOf('S') == -1) {
-        a = [0, a[0], 0];
-    }
-
-    if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1) {
-        a = [a[0], 0, a[1]];
-    }
-    if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1 && duration.indexOf('S') == -1) {
-        a = [a[0], 0, 0];
-    }
-
-    duration = 0;
-
-    if (a.length == 3) {
-        duration = duration + parseInt(a[0]) * 3600;
-        duration = duration + parseInt(a[1]) * 60;
-        duration = duration + parseInt(a[2]);
-    }
-
-    if (a.length == 2) {
-        duration = duration + parseInt(a[0]) * 60;
-        duration = duration + parseInt(a[1]);
-    }
-
-    if (a.length == 1) {
-        duration = duration + parseInt(a[0]);
-    }
-
-    return duration;
-}
+      utils = require('./utils');
 
 class ConcurrentExecutor {
     constructor(action, concurrency) {
@@ -113,7 +71,7 @@ class Downloader {
     _downloadSong(videoId) {
         return new Promise((resolve, reject) => {
             const url = 'http://www.youtube.com/watch?v=' + videoId;
-            const fileName = getFileName(this.songs[videoId].title);
+            const fileName = utils.getFileName(this.songs[videoId].title);
             if(fs.existsSync(fileName)) {
                 this.splitter.splitAlbum(videoId);
                 return resolve();
@@ -168,12 +126,12 @@ class Splitter {
         return new Promise((resolve) => {
             const artist = albumName.split('-')[0].trim();
 
-            if(fs.existsSync(folder + sanatizeFileName(artist + ' - ' + songName + '.mp3'))) {
+            if(fs.existsSync(config.download_folder + utils.sanatizeFileName(artist + ' - ' + songName + '.mp3'))) {
                 return resolve();
             }
 
             console.log(`splitting ${songName} from ${albumName}`);
-            const songProc = new ffmpeg({source: fs.createReadStream(getFileName(albumName))});
+            const songProc = new ffmpeg({source: fs.createReadStream(utils.getFileName(albumName))});
             songProc.on('end', () => resolve());
 
             if(start !== 0) {
@@ -189,7 +147,7 @@ class Splitter {
                 .outputOption('-metadata', `artist=${artist}`)
                 .outputOption('-metadata', `album=${albumName.split('-')[1]}`);
 
-            songProc.saveToFile(folder + sanatizeFileName(artist + ' - ' + songName + '.mp3'));
+            songProc.saveToFile(config.download_folder + utils.sanatizeFileName(artist + ' - ' + songName + '.mp3'));
         });
     }
 
@@ -201,16 +159,16 @@ class Splitter {
 
             youtube.videos.list({
                 part: 'contentDetails',
-                auth: API_TOKEN,
+                auth: API_KEY,
                 id: videoId
             }, (err, snippet) => {
-                if(getDuration(snippet.items[0].contentDetails.duration) < 8*60) {
+                if(utils.getDuration(snippet.items[0].contentDetails.duration) < config.min_duration_to_split) {
                    return resolve([]); 
                 }
                 
                 youtube.videos.list({
                     part: 'snippet',
-                    auth: API_TOKEN,
+                    auth: API_KEY,
                     id: videoId
                 }, (err, snippet) => {
                     let songList = this._parseSongList(snippet.items[0].snippet.description);
@@ -221,7 +179,7 @@ class Splitter {
                     
                     youtube.commentThreads.list({
                         part: 'snippet',
-                        auth: API_TOKEN,
+                        auth: API_KEY,
                         videoId: videoId,
                         order: 'relevance',
                         textFormat: 'plainText',
@@ -278,7 +236,7 @@ class Splitter {
     }
 }
 
-downloader = new Downloader(songs);
+downloader = new Downloader(songs, config.concurrency);
 
 io.on('connection', (socket) => {
     console.log('connected!');

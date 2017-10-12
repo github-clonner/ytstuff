@@ -1,0 +1,5 @@
+{
+	"download_folder": "../downloads/",
+	"concurrency": 10,
+	"min_duration_to_split": 480
+}

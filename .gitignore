@@ -1,4 +1,4 @@
 node_modules/
 downloads/
-config.json
-songs.json
+src/config/youtube.json
+src/data/songs.json
