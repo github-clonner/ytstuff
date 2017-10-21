@@ -1,0 +1,57 @@
+.song-list-item {
+	margin-top: 10px;
+	display: flex;
+	height: 75px;
+	align-items: center;
+}
+
+.song-list-item * {
+	margin-right: 10px;
+}
+
+.thumb {
+	position: relative;
+	height: 75px;
+	overflow: hidden;
+	width: 133px;
+}
+
+.song-list-item .thumb img {
+	position: absolute;
+	height: 100px;
+	top: -13px
+}
+
+.song-list-item .song-info {
+	max-width: 50%;
+}
+
+.rtl {
+	direction: rtl;
+}
+
+.song-list-item .play-button {
+}
+
+.song-list-item .song-name {
+	font-family: 'Open Sans', sans-serif;
+	font-size: 16px;
+    margin-top: 1px;
+}
+
+.song-list-item .artist-name {
+	font-family: 'Lato', sans-serif;
+	font-size: 18px;
+}
+
+.song-list-item .song-date-added {
+	margin-left: auto;
+}
+
+.song-list-item .glyphicon {
+	top: 0px;
+}
+
+.panel.panel-default {
+	border: none;
+}
