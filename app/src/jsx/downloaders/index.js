@@ -2,34 +2,35 @@ import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import { getFileName, ConcurrentExecutor } from '../utils';
 import downloadFromYoutube from './youtube';
+import moment from 'moment';
+import store from '../store';
+import { LIST_END } from '../actions/constants';
+import { addSong } from '../actions/songs';
 
 function downloadSong(song) {
 	return new Promise((resolve, reject) => {
-		try {
-			console.log(song);
-			const fileName = getFileName(song);
-			if (fs.existsSync(fileName)) {
-				return resolve();
-			}
+		const fileName = getFileName(song);
+		/*if (fs.existsSync(fileName)) {
+			return resolve();
+		}*/
 
-			const stream = downloaders[song.type](song);
-			const proc = new ffmpeg({source: stream});
+		const stream = downloaders[song.type](song);
+		const proc = new ffmpeg({source: stream});
 
-			proc.on('end', () => {
-				console.log('done!');
-				resolve();
-			}).on('error', function(err) {
-				console.log('An error occurred: ' + err.message);
-			});
+		proc.on('end', () => {
+			console.log('done!');
+			resolve();
+		}).on('progress', progress => {
+			song = Object.assign({}, song, { downloadedPercent: moment.duration(progress.timemark).asMilliseconds() / (song.duration * 1000) });
+			console.log(song.downloadedPercent);
+			store.dispatch(addSong(song, LIST_END));
+		});
 
-			proc.outputOption('-metadata', `title=${song.songName}`)
-				.outputOption('-metadata', `artist=${song.artistName}`);
+		proc.outputOption('-metadata', `title=${song.songName}`)
+			.outputOption('-metadata', `artist=${song.artistName}`);
 
-			proc.saveToFile(fileName);
+		proc.saveToFile(fileName);
 
-		} catch(e) {
-			console.log(e);
-		}
 	});
 }
 
@@ -40,5 +41,5 @@ const downloaders = {
 };
 
 export default function download(song) {
-	executor.queueTask(song);
+	return executor.queueTask(song);
 }

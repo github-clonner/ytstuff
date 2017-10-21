@@ -1,5 +1,6 @@
 import { ADD_SONG, LIST_START } from '../actions/constants';
 import { STATE_DOWNLOADED, STATE_DOWNLOADING } from '../fetchers/constants';
+import _ from 'lodash';
 
 function addSongToList(list, song) {
 	if (song.where === LIST_START) {
@@ -15,14 +16,29 @@ function addSongToList(list, song) {
 	}
 }
 
+function tryToAdd(list, { song, where }, belongsInList) {
+	const songInList = _.find(list, { id: song.id, type: song.type });
+	console.log(song);
+	if (songInList) {
+		if (belongsInList) {
+			list = _.clone(list);
+			console.log('lelelelelelelelelel');
+			Object.assign(songInList, song);
+			console.log(list);
+		} else {
+			list = _.remove(songInList, { id: song.id, type: song.type });
+		}
+	} else if (belongsInList) {
+		list = addSongToList(list, { song, where });
+	}
+
+	return list;
+}
+
 export function downloadedSongsReducer(state = [], action) {
 	switch(action.type) {
 		case ADD_SONG:
-			console.log(action.data.song);
-			if (action.data.song.state === STATE_DOWNLOADED)
-				return addSongToList(state, action.data);
-
-			return state;
+			return tryToAdd(state, action.data, action.data.song.state === STATE_DOWNLOADED);
 		default:
 			return state;
 	}
@@ -31,10 +47,7 @@ export function downloadedSongsReducer(state = [], action) {
 export function downloadingSongsReducer(state = [], action) {
 	switch(action.type) {
 		case ADD_SONG:
-			if (action.data.song.state === STATE_DOWNLOADING)
-				return addSongToList(state, action.data);
-			
-			return state;
+			return tryToAdd(state, action.data, action.data.song.state === STATE_DOWNLOADING);
 		default:
 			return state;
 	}

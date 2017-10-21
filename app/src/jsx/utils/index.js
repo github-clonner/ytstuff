@@ -22,7 +22,7 @@ export function getFileName(song) {
 }
 
 export class ConcurrentExecutor {
-	constructor(action, concurrency) {
+	constructor(action, concurrency = 4) {
 		this.action = action;
 		this.concurrency = concurrency;
 		this.queue = [];
@@ -31,8 +31,10 @@ export class ConcurrentExecutor {
 	}
 
 	queueTask(task) {
-		this.queue.push(task);
-		this._tryToRun();
+		return new Promise((resolve, reject) => {
+			this.queue.push({ task, resolve });
+			this._tryToRun();
+		});
 	}
 
 	queueTasks(tasks) {
@@ -56,8 +58,11 @@ export class ConcurrentExecutor {
 
 	_runExecutor() {
 		if(this.queue.length > 0) {
-			const task = this.queue.shift();
-			this.action(task).then(() => this._runExecutor());
+			const { task, resolve } = this.queue.shift();
+			this.action(task).then(() => {
+				resolve(task);
+				this._runExecutor();
+			});
 		} else {
 			this.concurrentExecutors--;
 			this.canRunMore = true;

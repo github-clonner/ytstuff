@@ -6,13 +6,14 @@ const fetchers = {
 	YOUTUBE_SONG: fetchYoutubeSong
 };
 
-export default function fetch(song, boundAction) {
+export default function fetch(song, boundAction, boundCacheAction) {
 	const songFromCache = fetchSongFromCache(song);
 	if (songFromCache) {
-		return boundAction(songFromCache);
+		return boundCacheAction ? boundCacheAction(songFromCache) : boundAction(songFromCache);
 	}
 
 	return fetchers[song.type](song).then(song => {
+		console.log('asd', song);
 		boundAction(song);
 		return song;
 	});
