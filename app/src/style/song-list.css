@@ -1,12 +1,27 @@
+.song-list {
+	padding: 10px 0;
+}
+
 .song-list-item {
-	margin-top: 10px;
+	padding: 0 15px;
+}
+
+.album-songs {
+	padding-left: 60px;
+}
+
+.album-songs li {
+	padding-right: 0;
+}
+
+.song-list-item .song {
 	display: flex;
 	height: 75px;
 	align-items: center;
 	position: relative;
 }
 
-.song-list-item * {
+.song-list-item .song * {
 	margin-right: 10px;
 	z-index: 1;
 }
@@ -25,7 +40,7 @@
 }
 
 .song-list-item .song-info {
-	max-width: 50%;
+	max-width: 70%;
 }
 
 .rtl {
@@ -46,12 +61,16 @@
 	font-size: 18px;
 }
 
-.song-list-item .song-date-added {
+.song-list-item .to-right {
 	margin-left: auto;
 }
 
 .song-list-item .glyphicon {
 	top: 0px;
+}
+
+.song-list-item .glyphicon.disabled {
+	color: rgba(0,0,0,0);
 }
 
 .song-list-item .progress {

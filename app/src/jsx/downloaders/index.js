@@ -18,11 +18,9 @@ function downloadSong(song) {
 		const proc = new ffmpeg({source: stream});
 
 		proc.on('end', () => {
-			console.log('done!');
 			resolve();
 		}).on('progress', progress => {
 			song = Object.assign({}, song, { downloadedPercent: moment.duration(progress.timemark).asMilliseconds() / (song.duration * 1000) });
-			console.log(song.downloadedPercent);
 			store.dispatch(addSong(song, LIST_END));
 		});
 

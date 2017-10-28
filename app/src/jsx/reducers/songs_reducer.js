@@ -18,13 +18,10 @@ function addSongToList(list, song) {
 
 function tryToAdd(list, { song, where }, belongsInList) {
 	const songInList = _.find(list, { id: song.id, type: song.type });
-	console.log(song);
 	if (songInList) {
 		if (belongsInList) {
 			list = _.clone(list);
-			console.log('lelelelelelelelelel');
 			Object.assign(songInList, song);
-			console.log(list);
 		} else {
 			list = _.remove(songInList, { id: song.id, type: song.type });
 		}

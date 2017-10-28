@@ -13,7 +13,6 @@ export default function fetch(song, boundAction, boundCacheAction) {
 	}
 
 	return fetchers[song.type](song).then(song => {
-		console.log('asd', song);
 		boundAction(song);
 		return song;
 	});
